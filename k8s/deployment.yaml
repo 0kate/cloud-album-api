@@ -21,6 +21,10 @@ spec:
         name: cloud-album-api
         resources: {}
         envFrom:
+        - configMapRef:
+            name: google-drive-root-file-id
         - secretRef:
             name: cloud-album-api-key
+        - secretRef:
+            name: google-drive-secret
 status: {}
