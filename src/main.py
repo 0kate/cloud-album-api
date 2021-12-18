@@ -3,6 +3,7 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from google.oauth2.service_account import Credentials
 from googleapiclient import discovery
@@ -14,6 +15,15 @@ if os.getenv('DEV', 'false') == 'true':
 
 api_key = os.getenv('API_KEY', '')
 app = FastAPI()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
 
 @app.middleware('http')
