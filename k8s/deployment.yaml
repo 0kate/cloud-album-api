@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cloud-album-api
+  name: cloud-album-api
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: cloud-album-api
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: cloud-album-api
+    spec:
+      containers:
+      - image: ghcr.io/0kate/cloud-album-api:latest
+        name: cloud-album-api
+        resources: {}
+status: {}
