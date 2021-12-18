@@ -20,4 +20,7 @@ spec:
       - image: ghcr.io/0kate/cloud-album-api:latest
         name: cloud-album-api
         resources: {}
+        envFrom:
+        - secretRef:
+            name: cloud-album-api-key
 status: {}
