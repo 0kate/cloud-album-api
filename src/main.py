@@ -101,3 +101,32 @@ async def get_thumbnail(album_name: str, request: Request):
         'thumbnail': content,
     }
 
+
+@app.get('/albums/{album_name}')
+async def get_images(album_name: str, request: Request):
+    root_file_id = os.getenv('GOOGLE_DRIVE_ROOT_FILE_ID')
+    if root_file_id is None:
+        print('Error: root file id is not set.')
+        return JSONResponse({
+            'message': 'Internal server error. Please contact to the admin.',
+        }, status_code=500)
+
+    service_account_info = os.getenv('GOOGLE_DRIVE_SECRET')
+    if service_account_info is None:
+        print('Error: secret is not set.')
+        return JSONResponse({
+            'message': 'Internal server error. Please contact to the admin.',
+        }, status_code=500)
+
+    service_account_info = json.loads(service_account_info)
+    gdrive = GoogleDrive(service_account_info, root_file_id)
+    images = await gdrive.ls(f'/{album_name}')
+
+    return {
+        'albumName': album_name,
+        'images': [
+            { 'name': image.name }
+            for image in images
+            if image.name != 'thumbnail'
+        ],
+    }

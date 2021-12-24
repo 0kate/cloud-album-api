@@ -1,3 +1,4 @@
+import asyncio
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -23,6 +24,10 @@ class CloudStorage(metaclass=ABCMeta):
     async def ls(self, path: str) -> List[DEntry]:
         ...
 
+    @abstractmethod
+    async def cat(self, path: str) -> Optional[bytes]:
+        ...
+
 
 class GoogleDrive(CloudStorage):
     def __init__(self, service_account_info: dict, root_file_id: str):
@@ -31,36 +36,51 @@ class GoogleDrive(CloudStorage):
         self._root_file_id = root_file_id
 
     async def ls(self, path: str) -> List[DEntry]:
-        response = self._gdrive.files().list(q=f'"{self._root_file_id}" in parents').execute()
-        print(response['files'])
+        loop = asyncio.get_event_loop()
+        target_file_id = await self._resolve_path(path)
+        files = []
+        if target_file_id is not None:
+            query = self._gdrive.files().list(q=f'"{target_file_id}" in parents')
+            response = await loop.run_in_executor(None, query.execute)
+            files = response.get('files', [])
         return [
             DEntry(
                 type=DEntryType.DIRECTORY if f.get('mimeType', '') == 'application/vnd.google-apps.folder' else DEntryType.FILE,
                 name=f.get('name', 'unknown'),
             )
-            for f in response.get('files', [])
+            for f in files
         ]
 
     async def cat(self, path: str) -> Optional[bytes]:
-        entry_names = iter([name for name in path.split('/') if len(name) > 0])
-        parent_file_id = self._root_file_id
-
-        target_entry_name = next(entry_names)
+        loop = asyncio.get_event_loop()
+        target_file_id = await self._resolve_path(path)
         content = None
-        while True:
-            response = self._gdrive.files().list(q=f'"{parent_file_id}" in parents').execute()
-            files = response.get('files', [])
-            entry_name_id_map = {
-                f.get('name', 'unknown'): f.get('id', '')
-                for f in files
-            }
-            if target_entry_name not in entry_name_id_map:
-                break
-            next_file_id = entry_name_id_map[target_entry_name]
-            if len(files) == 1:
-                request = self._gdrive.files().get_media(fileId=files[0]['id'])
-                response, content = request.http.request(request.uri, request.method)
-                break
-            target_entry_name = next(entry_names)
-            parent_file_id = next_file_id
+        if target_file_id is not None:
+            request = self._gdrive.files().get_media(fileId=target_file_id)
+            response, content = await loop.run_in_executor(None, request.http.request, request.uri, request.method)
         return content
+
+    async def _resolve_path(self, path: str) -> Optional[str]:
+        loop = asyncio.get_event_loop()
+        file_id = self._root_file_id
+        entry_names = iter([name for name in path.split('/') if len(name) > 0])
+        while True:
+            query = self._gdrive.files().list(q=f'"{file_id}" in parents')
+            response = await loop.run_in_executor(None, query.execute)
+            files = response.get('files', [])
+
+            try:
+                next_entry = None
+                target_entry_name = next(entry_names)
+                for f in files:
+                    if target_entry_name == f.get('name', ''):
+                        next_entry = f
+                        break    
+                if next_entry is None:
+                    break
+                file_id = next_entry.get('id', None)
+                if next_entry.get('mimeType', '') != 'application/vnd.google-apps.folder':
+                    break
+            except StopIteration:
+                break    
+        return file_id
