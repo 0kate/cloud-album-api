@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import json
 import os
@@ -101,7 +102,8 @@ async def get_image_content(album_name: str, image_name: str):
     gdrive = GoogleDrive(service_account_info, root_file_id)
     content = await gdrive.cat(f'/{album_name}/{image_name}')
     if content is not None:
-        content = base64.b64encode(content)
+        loop = asyncio.get_event_loop()
+        content = await loop.run_in_executor(None, base64.b64encode, content)
 
     return {
         'albumName': album_name,
