@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import sys
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
@@ -14,10 +15,22 @@ if os.getenv('DEV', 'false') == 'true':
     load_dotenv()
 
 
-api_key = os.getenv('API_KEY', '')
+required_environment_vars = [
+    'API_KEY',
+    'GOOGLE_DRIVE_ROOT_FILE_ID',
+    'GOOGLE_DRIVE_SECRET',
+]
+for required_environment_var in required_environment_vars:
+    if required_environment_var not in os.environ:
+        print(f'Error: {required_environment_var} is not set.')
+        sys.exit(1)
+
+api_key = os.environ['API_KEY']
+root_file_id = os.environ['GOOGLE_DRIVE_ROOT_FILE_ID']
+service_account_info = json.loads(os.environ['GOOGLE_DRIVE_SECRET'])
+
+
 app = FastAPI()
-
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
@@ -46,22 +59,10 @@ async def index():
 
 
 @app.get('/albums')
-async def get_albums(request: Request):
-    root_file_id = os.getenv('GOOGLE_DRIVE_ROOT_FILE_ID')
-    if root_file_id is None:
-        print('Error: root file id is not set.')
-        return JSONResponse({
-            'message': 'Internal server error. Please contact to the admin.',
-        }, status_code=500)
+async def get_albums():
+    global root_file_id
+    global service_account_info
 
-    service_account_info = os.getenv('GOOGLE_DRIVE_SECRET')
-    if service_account_info is None:
-        print('Error: secret is not set.')
-        return JSONResponse({
-            'message': 'Internal server error. Please contact to the admin.',
-        }, status_code=500)
-
-    service_account_info = json.loads(service_account_info)
     gdrive = GoogleDrive(service_account_info, root_file_id)
     entries = await gdrive.ls('/')
 
@@ -74,51 +75,11 @@ async def get_albums(request: Request):
     }
 
 
-@app.get('/albums/{album_name}/thumbnail')
-async def get_thumbnail(album_name: str, request: Request):
-    root_file_id = os.getenv('GOOGLE_DRIVE_ROOT_FILE_ID')
-    if root_file_id is None:
-        print('Error: root file id is not set.')
-        return JSONResponse({
-            'message': 'Internal server error. Please contact to the admin.',
-        }, status_code=500)
-
-    service_account_info = os.getenv('GOOGLE_DRIVE_SECRET')
-    if service_account_info is None:
-        print('Error: secret is not set.')
-        return JSONResponse({
-            'message': 'Internal server error. Please contact to the admin.',
-        }, status_code=500)
-
-    service_account_info = json.loads(service_account_info)
-    gdrive = GoogleDrive(service_account_info, root_file_id)
-    content = await gdrive.cat(f'/{album_name}/thumbnail')
-    if content is not None:
-        content = base64.b64encode(content)
-
-    return {
-        'albumName': album_name,
-        'thumbnail': content,
-    }
-
-
 @app.get('/albums/{album_name}')
-async def get_images(album_name: str, request: Request):
-    root_file_id = os.getenv('GOOGLE_DRIVE_ROOT_FILE_ID')
-    if root_file_id is None:
-        print('Error: root file id is not set.')
-        return JSONResponse({
-            'message': 'Internal server error. Please contact to the admin.',
-        }, status_code=500)
+async def get_images(album_name: str):
+    global root_file_id
+    global service_account_info
 
-    service_account_info = os.getenv('GOOGLE_DRIVE_SECRET')
-    if service_account_info is None:
-        print('Error: secret is not set.')
-        return JSONResponse({
-            'message': 'Internal server error. Please contact to the admin.',
-        }, status_code=500)
-
-    service_account_info = json.loads(service_account_info)
     gdrive = GoogleDrive(service_account_info, root_file_id)
     images = await gdrive.ls(f'/{album_name}')
 
@@ -129,4 +90,21 @@ async def get_images(album_name: str, request: Request):
             for image in images
             if image.name != 'thumbnail'
         ],
+    }
+
+
+@app.get('/albums/{album_name}/{image_name}')
+async def get_image_content(album_name: str, image_name: str):
+    global root_file_id
+    global service_account_info
+
+    gdrive = GoogleDrive(service_account_info, root_file_id)
+    content = await gdrive.cat(f'/{album_name}/thumbnail')
+    if content is not None:
+        content = base64.b64encode(content)
+
+    return {
+        'albumName': album_name,
+        'imageName': image_name,
+        'content': content,
     }
