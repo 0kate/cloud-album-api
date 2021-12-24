@@ -99,7 +99,7 @@ async def get_image_content(album_name: str, image_name: str):
     global service_account_info
 
     gdrive = GoogleDrive(service_account_info, root_file_id)
-    content = await gdrive.cat(f'/{album_name}/thumbnail')
+    content = await gdrive.cat(f'/{album_name}/{image_name}')
     if content is not None:
         content = base64.b64encode(content)
 
