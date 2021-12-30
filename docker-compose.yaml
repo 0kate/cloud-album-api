@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  cloud-album-api:
+    build: .
+    image: cloud-album-api:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    command: pipenv run dev
+  cloud-album-mongo:
+    image: mongo:4.4-rc-focal
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
