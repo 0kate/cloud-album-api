@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloud-album-mongodb-credentials
+data:
+  MONGO_INITDB_ROOT_USERNAME:
+  MONGO_INITDB_ROOT_PASSWORD:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cloud-album-mongo
+  name: cloud-album-mongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-album-mongo
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: cloud-album-mongo
+    spec:
+      containers:
+      - image: mongo:4.4-rc-focal
+        name: mongo
+        resources: {}
+        envFrom:
+        - secretRef:
+            name: cloud-album-mongodb-credentials
+        volumeMounts:
+          - name: mongodb-data
+            mountPath: /data/db
+      volumes:
+      - name: mongodb-data
+        hostPath:
+          path: /var/lib/mongodb/cloud-album
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: cloud-album-mongo
+  name: cloud-album-mongo
+spec:
+  ports:
+  - port: 27017
+    protocol: TCP
+    targetPort: 27017
+  selector:
+    app: cloud-album-mongo
+status:
+  loadBalancer: {}

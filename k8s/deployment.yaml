@@ -20,6 +20,17 @@ spec:
       - image: ghcr.io/0kate/cloud-album-api:latest
         name: cloud-album-api
         resources: {}
+        env:
+        - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: cloud-album-mongodb-credentials
+              key: MONGO_INITDB_ROOT_USERNAME
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cloud-album-mongodb-credentials
+              key: MONGO_INITDB_ROOT_PASSWORD
         envFrom:
         - configMapRef:
             name: google-drive-root-file-id
