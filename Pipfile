@@ -15,5 +15,5 @@ google-api-python-client = "*"
 python_version = "3.9"
 
 [scripts]
-start = "uvicorn src.main:app --host 0.0.0.0"
-dev = "uvicorn src.main:app --host 0.0.0.0 --reload"
+start = "uvicorn cloud_album_api.main:app --host 0.0.0.0"
+dev = "uvicorn cloud_album_api.main:app --host 0.0.0.0 --reload"
