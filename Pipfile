@@ -8,6 +8,7 @@ fastapi = "*"
 uvicorn = "*"
 python-dotenv = "*"
 google-api-python-client = "*"
+pymongo = "*"
 
 [dev-packages]
 

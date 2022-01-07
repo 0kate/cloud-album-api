@@ -3,11 +3,13 @@ import base64
 import json
 import os
 import sys
+import uuid
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pymongo import MongoClient
 
 from cloud_album_api.cloud_storage import DEntryType, GoogleDrive
 
@@ -20,6 +22,8 @@ required_environment_vars = [
     'API_KEY',
     'GOOGLE_DRIVE_ROOT_FILE_ID',
     'GOOGLE_DRIVE_SECRET',
+    'MONGO_USERNAME',
+    'MONGO_PASSWORD',
 ]
 for required_environment_var in required_environment_vars:
     if required_environment_var not in os.environ:
@@ -29,6 +33,9 @@ for required_environment_var in required_environment_vars:
 api_key = os.environ['API_KEY']
 root_file_id = os.environ['GOOGLE_DRIVE_ROOT_FILE_ID']
 service_account_info = json.loads(os.environ['GOOGLE_DRIVE_SECRET'])
+mongo_username = os.environ['MONGO_USERNAME']
+mongo_password = os.environ['MONGO_PASSWORD']
+mongo_client = MongoClient(f'mongodb://{mongo_username}:{mongo_password}@cloud-album-mongo:27017')
 
 
 app = FastAPI()
@@ -110,3 +117,61 @@ async def get_image_content(album_name: str, image_name: str):
         'imageName': image_name,
         'content': content,
     }
+
+
+@app.get('/memos')
+async def get_memos():
+    global mongo_client
+    collection = mongo_client.cloud_album.memos
+
+    memos = list(collection.find())
+    for memo in memos:
+        del memo['_id']
+
+    return {
+        'memos': memos,
+    }
+
+
+@app.post('/memos')
+async def create_new_memo(req: Request):
+    global mongo_client
+    collection = mongo_client.cloud_album.memos
+
+    body = await req.json()
+    memo_id = str(uuid.uuid4())
+    memo_title = body.get('title', '')
+    collection.insert_one({
+        'id': memo_id,
+        'title': memo_title,
+        'done': False,
+    })
+
+    return {
+        'id': memo_id,
+    }
+
+
+@app.delete('/memos/{memo_id}', status_code=204)
+async def delete_memo(memo_id: str):
+    global mongo_client
+    collection = mongo_client.cloud_album.memos
+
+    collection.delete_one({ 'id': memo_id })
+
+
+@app.put('/memos/{memo_id}', status_code=200)
+async def update_memo(memo_id: str, req: Request):
+    global mongo_client
+    collection = mongo_client.cloud_album.memos
+
+    body = await req.json()
+    collection.update_one(
+        { 'id': memo_id },
+        {
+            '$set': {
+                'title': body['title'],
+                'done': body['done'],
+            },
+        },
+    )
