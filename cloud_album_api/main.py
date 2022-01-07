@@ -35,7 +35,7 @@ root_file_id = os.environ['GOOGLE_DRIVE_ROOT_FILE_ID']
 service_account_info = json.loads(os.environ['GOOGLE_DRIVE_SECRET'])
 mongo_username = os.environ['MONGO_USERNAME']
 mongo_password = os.environ['MONGO_PASSWORD']
-mongo_client = MongoClient(f'mongodb://{mongo_username}:{mongo_password}@cloud-album-mongo:27017')
+mongo_client = MongoClient(f'mongodb://{mongo_username}:{mongo_password}@cloud-album-mongo')
 
 
 app = FastAPI()
