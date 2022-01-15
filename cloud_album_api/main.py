@@ -39,13 +39,6 @@ mongo_client = MongoClient(f'mongodb://{mongo_username}:{mongo_password}@cloud-a
 
 
 app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=['*'],
-    allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
-)
 
 
 @app.middleware('http')
@@ -57,6 +50,15 @@ async def check_api_key(request: Request, call_next):
         }, status_code=403)
     response = await call_next(request)
     return response
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
 
 @app.get('/')
