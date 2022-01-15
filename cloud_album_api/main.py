@@ -3,6 +3,7 @@ import base64
 import json
 import os
 import sys
+from typing import Optional
 import uuid
 
 from dotenv import load_dotenv
@@ -12,6 +13,7 @@ from fastapi.responses import JSONResponse
 from pymongo import MongoClient
 
 from cloud_album_api.cloud_storage import DEntryType, GoogleDrive
+from cloud_album_api.memo import Memo
 
 
 if os.getenv('DEV', 'false') == 'true':
@@ -126,12 +128,26 @@ async def get_memos():
     global mongo_client
     collection = mongo_client.cloud_album.memos
 
-    memos = list(collection.find())
-    for memo in memos:
-        del memo['_id']
-
+    memos = list(collection.find({'parent': None}))
     return {
-        'memos': memos,
+        'memos': [
+            Memo.from_dict(memo).to_dict()
+            for memo in memos
+        ],
+    }
+
+
+@app.get('/memos/{parent_id}')
+async def get_child_memos(parent_id: str):
+    global mongo_client
+    collection = mongo_client.cloud_album.memos
+
+    child_memos = list(collection.find({ 'parent': parent_id }))
+    return {
+        'memos': [
+            Memo.from_dict(memo).to_dict()
+            for memo in child_memos
+        ],
     }
 
 
@@ -141,16 +157,16 @@ async def create_new_memo(req: Request):
     collection = mongo_client.cloud_album.memos
 
     body = await req.json()
-    memo_id = str(uuid.uuid4())
-    memo_title = body.get('title', '')
-    collection.insert_one({
-        'id': memo_id,
-        'title': memo_title,
-        'done': False,
-    })
+    new_memo = Memo(
+        id=str(uuid.uuid4()),
+        title=body.get('title', ''),
+        is_list=body.get('isList', False),
+        parent=body.get('parent'),
+    )
+    collection.insert_one(new_memo.to_dict())
 
     return {
-        'id': memo_id,
+        'id': new_memo.id,
     }
 
 
@@ -172,8 +188,10 @@ async def update_memo(memo_id: str, req: Request):
         { 'id': memo_id },
         {
             '$set': {
-                'title': body['title'],
-                'done': body['done'],
+                'title': body.get('title', ''),
+                'done': body.get('done', False),
+                'isList': body.get('isList', False),
+                'parent': body.get('parent'),
             },
         },
     )
