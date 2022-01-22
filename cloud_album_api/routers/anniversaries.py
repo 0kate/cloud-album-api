@@ -1,8 +1,9 @@
 import datetime
 import os
 import uuid
+from typing import Optional
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Query
 from pymongo import MongoClient
 
 from cloud_album_api.anniversary import Anniversary
@@ -18,15 +19,29 @@ router = APIRouter()
 
 
 @router.get('')
-async def get_anniversaries():
+async def get_anniversaries(
+        from_date: Optional[str] = Query(None, alias='from'),
+        sort: Optional[str] = None):
     global anniversaries_collection
 
     anniversaries = list(anniversaries_collection.find())
-    return {
-        'anniversaries': [
-            Anniversary.from_dict(anniversary)
+    anniversaries = [
+        Anniversary.from_dict(anniversary)
+        for anniversary in anniversaries
+    ]
+
+    if from_date is not None:
+        from_datetime = datetime.datetime.strptime(from_date, '%Y-%m-%d')
+        anniversaries = [
+            anniversary
             for anniversary in anniversaries
-        ],
+            if anniversary.date >= from_datetime
+        ]
+    if sort:
+        anniversaries.sort(key=lambda anniversary: anniversary.to_dict()[sort])
+
+    return {
+        'anniversaries': anniversaries,
     }
 
 
