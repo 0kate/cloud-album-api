@@ -18,6 +18,9 @@ class DEntry:
     type: DEntryType
     name: str
 
+    def is_directory(self) -> bool:
+        return self.type == DEntryType.DIRECTORY
+
 
 class CloudStorage(metaclass=ABCMeta):
     @abstractmethod

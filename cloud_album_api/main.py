@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from pymongo import MongoClient
 
 from cloud_album_api.cloud_storage import DEntryType, GoogleDrive
-from cloud_album_api.routers import AnniversariesRouter, MemosRouter
+from cloud_album_api.routers import AlbumsRouter, AnniversariesRouter, MemosRouter
 
 
 if os.getenv('DEV', 'false') == 'true':
@@ -39,6 +39,7 @@ mongo_client = MongoClient(f'mongodb://{mongo_username}:{mongo_password}@cloud-a
 
 
 app = FastAPI()
+app.include_router(AlbumsRouter, prefix='/albums')
 app.include_router(AnniversariesRouter, prefix='/anniversaries')
 app.include_router(MemosRouter, prefix='/memos')
 
@@ -67,57 +68,4 @@ app.add_middleware(
 async def index():
     return {
         'message': 'hello',
-    }
-
-
-@app.get('/albums')
-async def get_albums():
-    global root_file_id
-    global service_account_info
-
-    gdrive = GoogleDrive(service_account_info, root_file_id)
-    entries = await gdrive.ls('/')
-
-    return {
-        'albums': [
-            { 'name': entry.name }
-            for entry in entries
-            if entry.type == DEntryType.DIRECTORY
-        ],
-    }
-
-
-@app.get('/albums/{album_name}')
-async def get_images(album_name: str):
-    global root_file_id
-    global service_account_info
-
-    gdrive = GoogleDrive(service_account_info, root_file_id)
-    images = await gdrive.ls(f'/{album_name}')
-
-    return {
-        'albumName': album_name,
-        'images': [
-            { 'name': image.name }
-            for image in images
-            if image.name != 'thumbnail'
-        ],
-    }
-
-
-@app.get('/albums/{album_name}/{image_name}')
-async def get_image_content(album_name: str, image_name: str):
-    global root_file_id
-    global service_account_info
-
-    gdrive = GoogleDrive(service_account_info, root_file_id)
-    content = await gdrive.cat(f'/{album_name}/{image_name}')
-    if content is not None:
-        loop = asyncio.get_event_loop()
-        content = await loop.run_in_executor(None, base64.b64encode, content)
-
-    return {
-        'albumName': album_name,
-        'imageName': image_name,
-        'content': content,
     }
