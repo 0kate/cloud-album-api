@@ -1,18 +1,11 @@
 import datetime
-import os
 import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Request, Query
-from pymongo import MongoClient
 
-from cloud_album_api.anniversary import Anniversary
-
-
-mongo_username = os.environ['MONGO_USERNAME']
-mongo_password = os.environ['MONGO_PASSWORD']
-mongo_client = MongoClient(f'mongodb://{mongo_username}:{mongo_password}@cloud-album-mongo')
-anniversaries_collection = mongo_client.cloud_album.anniversaries
+from cloud_album_api.models import Anniversary
+from cloud_album_api.repositories import Anniversaries
 
 
 router = APIRouter()
@@ -22,13 +15,7 @@ router = APIRouter()
 async def get_anniversaries(
         from_date: Optional[str] = Query(None, alias='from'),
         sort: Optional[str] = None):
-    global anniversaries_collection
-
-    anniversaries = list(anniversaries_collection.find())
-    anniversaries = [
-        Anniversary.from_dict(anniversary)
-        for anniversary in anniversaries
-    ]
+    anniversaries = Anniversaries.list()
 
     if from_date is not None:
         from_datetime = datetime.datetime.strptime(from_date, '%Y-%m-%d')
@@ -47,8 +34,6 @@ async def get_anniversaries(
 
 @router.post('')
 async def create_new_anniversary(req: Request):
-    global anniversaries_collection
-
     body = await req.json()
     new_anniversary = Anniversary(
         id=str(uuid.uuid4()),
@@ -57,7 +42,7 @@ async def create_new_anniversary(req: Request):
             body.get('date', ''), '%Y-%m-%d %H:%M:%S'),
         type=body.get('type', ''),
     )
-    anniversaries_collection.insert_one(new_anniversary.to_dict())
+    Anniversaries.new(new_anniversary)
 
     return {
         'id': new_anniversary.id,
@@ -66,6 +51,4 @@ async def create_new_anniversary(req: Request):
 
 @router.delete('/{anniversary_id}', status_code=204)
 async def delete_anniversary(anniversary_id: str):
-    global anniversaries_collection
-
-    anniversaries_collection.delete_one({ 'id': anniversary_id })
+    Anniversaries.delete(anniversary_id)

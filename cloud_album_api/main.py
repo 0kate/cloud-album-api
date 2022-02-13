@@ -1,5 +1,3 @@
-import asyncio
-import base64
 import json
 import os
 import sys
@@ -10,7 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pymongo import MongoClient
 
-from cloud_album_api.cloud_storage import DEntryType, GoogleDrive
 from cloud_album_api.routers import AlbumsRouter, AnniversariesRouter, MemosRouter
 
 

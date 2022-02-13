@@ -60,7 +60,7 @@ class GoogleDrive(CloudStorage):
         content = None
         if target_file_id is not None:
             request = self._gdrive.files().get_media(fileId=target_file_id)
-            response, content = await loop.run_in_executor(None, request.http.request, request.uri, request.method)
+            _, content = await loop.run_in_executor(None, request.http.request, request.uri, request.method)
         return content
 
     async def _resolve_path(self, path: str) -> Optional[str]:
@@ -78,12 +78,12 @@ class GoogleDrive(CloudStorage):
                 for f in files:
                     if target_entry_name == f.get('name', ''):
                         next_entry = f
-                        break    
+                        break
                 if next_entry is None:
                     break
                 file_id = next_entry.get('id', None)
                 if next_entry.get('mimeType', '') != 'application/vnd.google-apps.folder':
                     break
             except StopIteration:
-                break    
+                break
         return file_id
