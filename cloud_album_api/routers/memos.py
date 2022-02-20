@@ -13,7 +13,7 @@ router = APIRouter()
 async def get_memos():
     memos = Memos.list()
     return {
-        'memos': memos,
+        'memos': [memo.to_dict() for memo in memos],
     }
 
 
