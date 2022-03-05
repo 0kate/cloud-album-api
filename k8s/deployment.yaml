@@ -16,6 +16,7 @@ spec:
       labels:
         app: cloud-album-api
     spec:
+      serviceAccountName: ghcr
       containers:
       - image: ghcr.io/0kate/cloud-album-api:latest
         name: cloud-album-api
@@ -38,4 +39,3 @@ spec:
             name: cloud-album-api-key
         - secretRef:
             name: google-drive-secret
-status: {}
