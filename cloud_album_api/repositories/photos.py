@@ -23,11 +23,19 @@ class Photos:
         ]
 
     @classmethod
-    async def get_thumbnail(cls, album_name: str, photo_id: str) -> Optional[bytes]:
-        content = await cls.gdrive.cat(f'/{album_name}/{photo_id}/thumbnail')
-        return content
+    async def get_thumbnail(cls, album_name: str, photo_id: str) -> Optional[str]:
+        link = await cls.gdrive.ln(f'/{album_name}/{photo_id}/thumbnail')
+        return link
 
     @classmethod
-    async def get_content(cls, album_name: str, photo_id: str) -> Optional[bytes]:
-        content = await cls.gdrive.cat(f'/{album_name}/{photo_id}/{photo_id}')
-        return content
+    async def get_link(cls, album_name: str, photo_id: str) -> Optional[str]:
+        link = await cls.gdrive.ln(f'/{album_name}/{photo_id}/{photo_id}')
+        return link
+
+    @classmethod
+    async def suppress_thumbnail(cls, album_name: str, photo_id: str, wait_sec: int = 3):
+        await cls.gdrive.suppress_file(f'/{album_name}/{photo_id}/thumbnail', wait_sec)
+
+    @classmethod
+    async def suppress_photo(cls, album_name: str, photo_id: str, wait_sec: int = 3):
+        await cls.gdrive.suppress_file(f'/{album_name}/{photo_id}/{photo_id}', wait_sec)

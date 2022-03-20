@@ -1,7 +1,7 @@
 import asyncio
 import base64
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 
 from cloud_album_api.repositories import Albums, Photos
 
@@ -45,30 +45,26 @@ async def get_photos(album_name: str):
 
 
 @router.get('/{album_name}/photos/{photo_id}/thumbnail')
-async def get_photo_thumbnail(album_name: str, photo_id: str):
-    content = await Photos.get_thumbnail(album_name, photo_id)
-    if content is not None:
-        loop = asyncio.get_event_loop()
-        content = await loop.run_in_executor(None, base64.b64encode, content)
+async def get_photo_thumbnail(album_name: str, photo_id: str, background_tasks: BackgroundTasks):
+    link = await Photos.get_thumbnail(album_name, photo_id)
+    background_tasks.add_task(Photos.suppress_thumbnail, album_name, photo_id)
 
     return {
         'albumName': album_name,
         'imageName': f'{photo_id}/thumbnail',
-        'content': content,
+        'link': link,
     }
 
 
-@router.get('/{album_name}/photos/{photo_id}/content')
-async def get_photo_content(album_name: str, photo_id: str):
-    content = await Photos.get_content(album_name, photo_id)
-    if content is not None:
-        loop = asyncio.get_event_loop()
-        content = await loop.run_in_executor(None, base64.b64encode, content)
+@router.get('/{album_name}/photos/{photo_id}')
+async def get_photo(album_name: str, photo_id: str, background_tasks: BackgroundTasks):
+    link = await Photos.get_link(album_name, photo_id)
+    background_tasks.add_task(Photos.suppress_photo, album_name, photo_id)
 
     return {
         'albumName': album_name,
         'imageName': f'{photo_id}',
-        'content': content,
+        'link': link,
     }
 
 

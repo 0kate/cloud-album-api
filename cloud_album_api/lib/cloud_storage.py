@@ -63,6 +63,28 @@ class GoogleDrive(CloudStorage):
             _, content = await loop.run_in_executor(None, request.http.request, request.uri, request.method)
         return content
 
+    async def ln(self, path: str) -> Optional[str]:
+        loop = asyncio.get_event_loop()
+        target_file_id = await self._resolve_path(path)
+        link = None
+        if target_file_id is not None:
+            file_data = self._gdrive.files().get(fileId=target_file_id, fields='webContentLink').execute()
+            self._gdrive.permissions().create(
+                fileId=target_file_id,
+                body={
+                    'type': 'anyone',
+                    'role': 'reader',
+                },
+                fields='id',
+            ).execute()
+            link = file_data['webContentLink']
+        return link
+
+    async def suppress_file(self, path: str, wait_time: int):
+        target_file_id = await self._resolve_path(path)
+        await asyncio.sleep(wait_time)
+        self._gdrive.permissions().delete(fileId=target_file_id, permissionId='anyoneWithLink').execute()
+
     async def _resolve_path(self, path: str) -> Optional[str]:
         loop = asyncio.get_event_loop()
         file_id = self._root_file_id
