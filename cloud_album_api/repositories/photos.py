@@ -33,9 +33,9 @@ class Photos:
         return link
 
     @classmethod
-    async def suppress_thumbnail(cls, album_name: str, photo_id: str, wait_sec: int = 3):
-        await cls.gdrive.suppress_file(f'/{album_name}/{photo_id}/thumbnail', wait_sec)
+    async def suppress_thumbnail(cls, album_name: str, photo_id: str):
+        await cls.gdrive.suppress_file(f'/{album_name}/{photo_id}/thumbnail')
 
     @classmethod
-    async def suppress_photo(cls, album_name: str, photo_id: str, wait_sec: int = 3):
-        await cls.gdrive.suppress_file(f'/{album_name}/{photo_id}/{photo_id}', wait_sec)
+    async def suppress_photo(cls, album_name: str, photo_id: str):
+        await cls.gdrive.suppress_file(f'/{album_name}/{photo_id}/{photo_id}')

@@ -1,7 +1,7 @@
 import asyncio
 import base64
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter
 
 from cloud_album_api.repositories import Albums, Photos
 
@@ -45,9 +45,8 @@ async def get_photos(album_name: str):
 
 
 @router.get('/{album_name}/photos/{photo_id}/thumbnail')
-async def get_photo_thumbnail(album_name: str, photo_id: str, background_tasks: BackgroundTasks):
+async def get_photo_thumbnail(album_name: str, photo_id: str):
     link = await Photos.get_thumbnail(album_name, photo_id)
-    background_tasks.add_task(Photos.suppress_thumbnail, album_name, photo_id)
 
     return {
         'albumName': album_name,
@@ -56,16 +55,25 @@ async def get_photo_thumbnail(album_name: str, photo_id: str, background_tasks: 
     }
 
 
+@router.delete('/{album_name}/photos/{photo_id}/thumbnail/link', status_code=204)
+async def hide_thumbnail_link(album_name: str, photo_id: str):
+    await Photos.suppress_thumbnail(album_name, photo_id)
+
+
 @router.get('/{album_name}/photos/{photo_id}')
-async def get_photo(album_name: str, photo_id: str, background_tasks: BackgroundTasks):
+async def get_photo(album_name: str, photo_id: str):
     link = await Photos.get_link(album_name, photo_id)
-    background_tasks.add_task(Photos.suppress_photo, album_name, photo_id)
 
     return {
         'albumName': album_name,
         'imageName': f'{photo_id}',
         'link': link,
     }
+
+
+@router.delete('/{album_name}/photos/{photo_id}/link', status_code=204)
+async def hide_photo_link(album_name: str, photo_id: str):
+    await Photos.suppress_photo(album_name, photo_id)
 
 
 # @router.get('/{album_name}/{image_name}')

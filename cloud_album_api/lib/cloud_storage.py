@@ -83,9 +83,8 @@ class GoogleDrive(CloudStorage):
             link = file_data['webContentLink']
         return link
 
-    async def suppress_file(self, path: str, wait_time: int):
+    async def suppress_file(self, path: str):
         target_file_id = await self._resolve_path(path)
-        await asyncio.sleep(wait_time)
         request = self._gdrive.permissions().delete(fileId=target_file_id, permissionId='anyoneWithLink')
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, request.execute)
