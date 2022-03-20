@@ -7,8 +7,16 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
-    command: pipenv run dev
+      - ./:/app
+    environment:
+      API_KEY: ${API_KEY}
+      GOOGLE_DRIVE_ROOT_FILE_ID: ${GOOGLE_DRIVE_ROOT_FILE_ID}
+      GOOGLE_DRIVE_SECRET: ${GOOGLE_DRIVE_SECRET}
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_HOST: ${MONGO_HOST}
+      MONGO_SCHEME: ${MONGO_SCHEME}
+    command: uvicorn cloud_album_api.main:app --host 0.0.0.0 --reload
   cloud-album-mongo:
     image: mongo:4.4-rc-focal
     volumes:

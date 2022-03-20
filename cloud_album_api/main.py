@@ -1,8 +1,6 @@
 import json
 import os
-import sys
 
-from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -11,22 +9,18 @@ from pymongo import MongoClient
 from cloud_album_api.routers import AlbumsRouter, AnniversariesRouter, MemosRouter
 
 
-if os.getenv('DEV', 'false') == 'true':
-    load_dotenv()
-
-
-required_environment_vars = [
-    'API_KEY',
-    'GOOGLE_DRIVE_ROOT_FILE_ID',
-    'GOOGLE_DRIVE_SECRET',
-    'MONGO_USERNAME',
-    'MONGO_PASSWORD',
-    'MONGO_HOST',
-]
-for required_environment_var in required_environment_vars:
-    if required_environment_var not in os.environ:
-        print(f'Error: {required_environment_var} is not set.')
-        sys.exit(1)
+# required_environment_vars = [
+#     'API_KEY',
+#     'GOOGLE_DRIVE_ROOT_FILE_ID',
+#     'GOOGLE_DRIVE_SECRET',
+#     'MONGO_USERNAME',
+#     'MONGO_PASSWORD',
+#     'MONGO_HOST',
+# ]
+# for required_environment_var in required_environment_vars:
+#     if required_environment_var not in os.environ:
+#         print(f'Error: {required_environment_var} is not set.')
+#         sys.exit(1)
 
 api_key = os.environ['API_KEY']
 root_file_id = os.environ['GOOGLE_DRIVE_ROOT_FILE_ID']
@@ -34,7 +28,8 @@ service_account_info = json.loads(os.environ['GOOGLE_DRIVE_SECRET'])
 mongo_username = os.environ['MONGO_USERNAME']
 mongo_password = os.environ['MONGO_PASSWORD']
 mongo_host = os.environ['MONGO_HOST']
-mongo_client = MongoClient(f'mongodb+srv://{mongo_username}:{mongo_password}@{mongo_host}')
+mongo_scheme = os.environ.get('MONGO_SCHEME', 'mongodb+srv')
+mongo_client = MongoClient(f'{mongo_scheme}://{mongo_username}:{mongo_password}@{mongo_host}')
 
 
 app = FastAPI()
