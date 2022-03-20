@@ -34,7 +34,7 @@ service_account_info = json.loads(os.environ['GOOGLE_DRIVE_SECRET'])
 mongo_username = os.environ['MONGO_USERNAME']
 mongo_password = os.environ['MONGO_PASSWORD']
 mongo_host = os.environ['MONGO_HOST']
-mongo_client = MongoClient(f'mongodb+srv://{mongo_username}:{mongo_password}@{mongo_host}/CloudAlbum?retryWrites=true&w=majority')
+mongo_client = MongoClient(f'mongodb+srv://{mongo_username}:{mongo_password}@{mongo_host}')
 
 
 app = FastAPI()

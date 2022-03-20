@@ -8,7 +8,8 @@ from cloud_album_api.models import Memo
 
 mongo_username = os.environ['MONGO_USERNAME']
 mongo_password = os.environ['MONGO_PASSWORD']
-mongo_client = MongoClient(f'mongodb://{mongo_username}:{mongo_password}@cloud-album-mongo')
+mongo_host = os.environ['MONGO_HOST']
+mongo_client = MongoClient(f'mongodb+srv://{mongo_username}:{mongo_password}@{mongo_host}')
 
 
 class Memos:
