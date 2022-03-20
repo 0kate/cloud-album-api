@@ -9,7 +9,7 @@ from cloud_album_api.models import Anniversary
 mongo_username = os.environ['MONGO_USERNAME']
 mongo_password = os.environ['MONGO_PASSWORD']
 mongo_host = os.environ['MONGO_HOST']
-mongo_scheme = os.environ['MONGO_SCHEME']
+mongo_scheme = os.environ.get('MONGO_SCHEME', 'mongodb+srv')
 mongo_client = MongoClient(f'{mongo_scheme}://{mongo_username}:{mongo_password}@{mongo_host}')
 
 
