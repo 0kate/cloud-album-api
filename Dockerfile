@@ -6,5 +6,4 @@ RUN pip install pipenv && \
     pipenv install --system
 
 EXPOSE 8000
-# CMD ["pipenv", "run", "start"]
 CMD ["uvicorn", "cloud_album_api.main:app", "--host", "0.0.0.0"]

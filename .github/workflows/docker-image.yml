@@ -6,7 +6,7 @@ env:
   GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
   GCP_REGION: ${{ secrets.GCP_REGION }}
   SERVICE: cloud-album-api
-  IMAGE: us.gcr.io/${{ secrets.GCP_PROJECT }}/cloud-album-api:latest
+  IMAGE: us.gcr.io/${{ secrets.GCP_PROJECT }}/cloud-album-api:${{ github.sha }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,7 +14,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Authenticate GCP
+    - name: Authenticate to GCP
       uses: google-github-actions/auth@v0
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
