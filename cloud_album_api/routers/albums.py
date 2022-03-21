@@ -9,7 +9,7 @@ from cloud_album_api.repositories import Albums, Photos
 router = APIRouter()
 
 
-@router.get('')
+@router.get('/')
 async def get_albums():
     albums = await Albums.list()
     return {
