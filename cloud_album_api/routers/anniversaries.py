@@ -11,7 +11,7 @@ from cloud_album_api.repositories import Anniversaries
 router = APIRouter()
 
 
-@router.get('')
+@router.get('/')
 async def get_anniversaries(
         from_date: Optional[str] = Query(None, alias='from'),
         sort: Optional[str] = None):
@@ -32,7 +32,7 @@ async def get_anniversaries(
     }
 
 
-@router.post('')
+@router.post('/')
 async def create_new_anniversary(req: Request):
     body = await req.json()
     new_anniversary = Anniversary(

@@ -9,7 +9,7 @@ from cloud_album_api.repositories import Memos
 router = APIRouter()
 
 
-@router.get('')
+@router.get('/')
 async def get_memos():
     memos = Memos.list()
     return {
@@ -17,7 +17,7 @@ async def get_memos():
     }
 
 
-@router.post('')
+@router.post('/')
 async def create_new_memo(req: Request):
     body = await req.json()
     new_memo = Memo(
